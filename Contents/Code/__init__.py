@@ -94,6 +94,18 @@ def VideoMainMenu():
     dir.Append(
         Function(
             DirectoryItem(
+                LiveMenu,
+                "Live",
+                subtitle="subtitle",
+                summary="Regarder le direct",
+                thumb=R(ICON),
+                art=R(ART)
+            )
+        )
+    )
+    dir.Append(
+        Function(
+            DirectoryItem(
                 CategoriesMenu,
                 "Categories",
                 subtitle="subtitle",
@@ -146,18 +158,6 @@ def VideoMainMenu():
                 "Par date",
                 subtitle="subtitle",
                 summary="Rangement par date",
-                thumb=R(ICON),
-                art=R(ART)
-            )
-        )
-    )
-    dir.Append(
-        Function(
-            DirectoryItem(
-                LiveMenu,
-                "Live",
-                subtitle="subtitle",
-                summary="Regarder le direct",
                 thumb=R(ICON),
                 art=R(ART)
             )
@@ -249,7 +249,7 @@ def LiveMenu(sender):
     objects = JSON.ObjectFromString(json, encoding='iso-8859-15')
     for chaine in objects['configuration']['directs']:
         titre       = chaine['nom']
-        v_url       = chaine['video_iphone_v5']
+        v_url       = chaine['video_ipad']
         # Generating f4m manifest
         video_url   = getHDManifest(v_url)
         #video_url   = v_url
@@ -261,14 +261,14 @@ def LiveMenu(sender):
         thumb       = "%s.png" % chaine['nom'].lower()
         oc.add(
         VideoClipObject(
-            key = Callback(Lookup, title=titre, thumb=thumb, rating_key=rating_key, url=video_url, art=art, summary=summary, tagline=tagline),
+            key = Callback(Lookup, title=titre, thumb=thumb, rating_key=rating_key, url=v_url, art=art, summary=summary, tagline=tagline),
             title=L(titre),
             tagline=L(tagline),
             rating_key =  rating_key,
             items = [
                                 MediaObject(
-                                        parts = [PartObject(key=HTTPLiveStreamURL(Callback(PlayVideo, url=video_url)))],
-                                        optimized_for_streaming = False,
+                                        parts = [PartObject(key=HTTPLiveStreamURL(Callback(PlayVideo, url=v_url)))],
+                                        optimized_for_streaming = True,
                                 )
             ],
             summary=L(summary),
@@ -424,7 +424,7 @@ def Lookup(title, thumb, rating_key, url, art, summary, tagline):
                         items 		= [
                                 MediaObject(
                                         parts = [PartObject(key=HTTPLiveStreamURL(Callback(PlayVideo, url=url)))],
-                                        optimized_for_streaming = False,
+                                        optimized_for_streaming = True,
                                 )
                         ]
                 )
@@ -432,8 +432,9 @@ def Lookup(title, thumb, rating_key, url, art, summary, tagline):
 
         return oc
 
+@indirect
 def PlayVideo(url):
-        return Redirect(url)
+        return IndirectResponse(VideoClipObject, key=HTTPLiveStreamURL(url))
 
 def CallbackInProgress(sender):
     return MessageContainer(
