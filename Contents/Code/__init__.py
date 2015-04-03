@@ -249,7 +249,7 @@ def LiveMenu(sender):
 	objects =  JSON.ObjectFromURL('http://webservices.francetelevisions.fr/catchup/flux/message_FT.json')
 	for chaine in objects['configuration']['directs']:
 		channel       = chaine['nom']
-		url = 'http://pluzz.francetv.fr/'+channel
+		url = 'http://m.pluzz.francetv.fr/'+channel
 	
 		try:
 			eo = URLService.MetadataObjectForURL(url=url)

@@ -8,7 +8,7 @@
 		<dict>
 			<key>URLPatterns</key>
 			<array>
-				<string>^http:\/\/pluzz\.francetv\.fr\/.+</string>
+				<string>^http:\/\/m\.pluzz\.francetv\.fr\/.+</string>
 			</array>
 		</dict>
 	</dict>
