@@ -4,7 +4,7 @@ def NormalizeURL(url):
 	return url
 
 def MetadataObjectForURL(url):
-	if True:
+	try:
 		html = HTML.ElementFromURL(url)
 		
 		station = html.xpath('//meta[@name="title"]//@content')[0].replace(' en direct', '')
@@ -34,10 +34,8 @@ def MetadataObjectForURL(url):
 		
 		try: episode = int(html.xpath('//span[@itemprop="episode"]//span[@itemprop="name"]//text()')[0][1:])
 		except: episode = 0
-	else:
-		title = '1ere '
-		summary = ''
-		thumb = ''
+	except:
+		raise Ex.MediaGeoblocked
 		
 	
 	return EpisodeObject(
@@ -56,7 +54,6 @@ def MediaObjectsForURL(url):
 	json = JSON.ObjectFromURL('http://webservices.francetelevisions.fr/catchup/flux/message_FT.json')
 	
 	channels = {c['nom']: c['video_ipad'] for c in json['configuration']['directs']}
-	# Eh..?
 
 	if not channel_id in channels.keys():
 		raise Ex.MediaNotAvailable
@@ -64,8 +61,7 @@ def MediaObjectsForURL(url):
 	video_url = channels[channel_id]
 	
 	if urllib.urlopen(video_url).getcode() == 403:
-		pass
-		#raise Ex.MediaGeoblocked
+		raise Ex.MediaGeoblocked
 		
 	return [
 		MediaObject(

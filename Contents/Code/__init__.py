@@ -249,11 +249,10 @@ def LiveMenu(sender):
 	objects =  JSON.ObjectFromURL('http://webservices.francetelevisions.fr/catchup/flux/message_FT.json')
 	for chaine in objects['configuration']['directs']:
 		channel       = chaine['nom']
-		v_url       = chaine['video_ipad']
 		url = 'http://pluzz.francetv.fr/'+channel
 	
 		if not channel.startswith("france"):
-			#1ete is blocked in mainland France
+			# 1ere is blocked in mainland France
 			continue
 			
 		eo = URLService.MetadataObjectForURL(url=url)
