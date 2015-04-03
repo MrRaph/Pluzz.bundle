@@ -244,39 +244,26 @@ def getHDManifest(video_url):
 
 @route('/video/pluzz/live')
 def LiveMenu(sender):
-    oc = ObjectContainer(title1='Regarder le direct')
-    json = Data.Load('message_FT.json')
-    objects = JSON.ObjectFromString(json, encoding='iso-8859-15')
-    for chaine in objects['configuration']['directs']:
-        titre       = chaine['nom']
-        v_url       = chaine['video_ipad']
-        # Generating f4m manifest
-        video_url   = getHDManifest(v_url)
-        #video_url   = v_url
-        Log.Debug("VideoURL: %s" % video_url)
-        summary     = "%s en direct" % chaine['nom']
-        tagline     = summary
-        rating_key  = "direct_%s" % chaine['nom']
-        art         = "%s.png" % chaine['nom'].lower()
-        thumb       = "%s.png" % chaine['nom'].lower()
-        oc.add(
-        VideoClipObject(
-            key = Callback(Lookup, title=titre, thumb=thumb, rating_key=rating_key, url=v_url, art=art, summary=summary, tagline=tagline),
-            title=L(titre),
-            tagline=L(tagline),
-            rating_key =  rating_key,
-            items = [
-                                MediaObject(
-                                        parts = [PartObject(key=HTTPLiveStreamURL(Callback(PlayVideo, url=v_url)))],
-                                        optimized_for_streaming = True,
-                                )
-            ],
-            summary=L(summary),
-			art=R(art),
-			thumb=R(thumb),
-        )
-	    )
-    return oc
+	oc = ObjectContainer(title1='Regarder le direct')
+
+	objects =  JSON.ObjectFromURL('http://webservices.francetelevisions.fr/catchup/flux/message_FT.json')
+	for chaine in objects['configuration']['directs']:
+		channel       = chaine['nom']
+		v_url       = chaine['video_ipad']
+		url = 'http://pluzz.francetv.fr/'+channel
+	
+		if not channel.startswith("france"):
+			#1ete is blocked in mainland France
+			continue
+			
+		eo = URLService.MetadataObjectForURL(url=url)
+		eo.title = eo.source_title
+		eo.url = url
+		eo.thumb = Resource.ContentsOfURLWithFallback('http://www.renders-graphics.com/image/upload/normal/'+eo.title.replace(' ','_').replace('_4','4').replace('Ô','')+'.png')
+		
+		oc.add(eo)
+	
+	return oc
 
 @route('/video/pluzz/date')
 def DateMenu(sender):
@@ -408,29 +395,18 @@ def MediaView(ContentType, ContentFilter, title):
 	    )
     return oc
 
-@route('/video/pluzz/program')
-def Lookup(title, thumb, rating_key, url, art, summary, tagline):
-	Log.Debug("Entering Lookup")
-	oc = ObjectContainer()
-        oc.add(
-                VideoClipObject(
-                        key 		= Callback(Lookup, title=title, thumb=thumb, rating_key=rating_key, url=url, art=art, summary=summary, tagline=tagline),
-                        title 		= title,
-                        thumb 		= thumb,
-			tagline		= tagline,
-                        rating_key 	= rating_key,
-			summary		= summary,
-			art		= art,
-                        items 		= [
-                                MediaObject(
-                                        parts = [PartObject(key=HTTPLiveStreamURL(Callback(PlayVideo, url=url)))],
-                                        optimized_for_streaming = True,
-                                )
-                        ]
-                )
-        )
 
-        return oc
+@route('/video/pluzz/program')
+def Lookup(url, channel, oc=True):
+	eo = URLService.MetadataObjectForURL(url)
+	eo.url = url
+	eo. key = Callback(Lookup, url=url,v_url=v_url)
+	eo.rating_key=0
+	
+	if not oc:
+		return eo
+	
+	return ObjectContainer(items=[eo])
 
 @indirect
 def PlayVideo(url):

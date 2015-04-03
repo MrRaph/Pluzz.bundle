@@ -1,0 +1,85 @@
+import urllib
+
+def NormalizeURL(url):
+	return url
+
+def MetadataObjectForURL(url):
+	if True:
+		html = HTML.ElementFromURL(url)
+		
+		station = html.xpath('//meta[@name="title"]//@content')[0].replace(' en direct', '')
+	
+		show = html.xpath('//div[@id="diffusion-titre"]//text()')[0]
+		try: 
+			title = html.xpath('//span[@class="soustitre"]//text()')[0]
+		except:
+			title = show
+			show = ''
+		
+		try: summary = html.xpath('//span[contains(text(), "pisode : ")]//..//text()')[1].strip()
+		except:
+			try:
+				summary = html.xpath('//span[contains(text(), "mission : ")]//..//text()')[1].strip()
+			except:
+				try: summary = html.xpath('//span[contains(text(), "Le programme")]//..//text()')[1].strip()
+				except: summary = ''
+		
+		try: thumb = html.xpath("//div[img/@class='img-inrow']//img/@data-src")[0].replace('/100/', '/300/')
+		except: thumb = ''
+		Log("Ass")
+		Log(thumb)
+		
+		try: season = int(html.xpath('//span[@itemprop="season"]//span[@itemprop="name"]//text()')[0][1:])
+		except: season = 0
+		
+		try: episode = int(html.xpath('//span[@itemprop="episode"]//span[@itemprop="name"]//text()')[0][1:])
+		except: episode = 0
+	else:
+		title = '1ere '
+		summary = ''
+		thumb = ''
+		
+	
+	return EpisodeObject(
+		show = show,
+		title = title,
+		summary = summary,
+		thumb = Resource.ContentsOfURLWithFallback(thumb),
+		season = season,
+		index = episode,
+		source_title = station
+	)
+	
+@deferred
+def MediaObjectsForURL(url):
+	channel_id = url.rsplit('/',1)[1]
+	json = JSON.ObjectFromURL('http://webservices.francetelevisions.fr/catchup/flux/message_FT.json')
+	
+	channels = {c['nom']: c['video_ipad'] for c in json['configuration']['directs']}
+	# Eh..?
+
+	if not channel_id in channels.keys():
+		raise Ex.MediaNotAvailable
+		
+	video_url = channels[channel_id]
+	
+	if urllib.urlopen(video_url).getcode() == 403:
+		pass
+		#raise Ex.MediaGeoblocked
+		
+	return [
+		MediaObject(
+			parts = [
+				PartObject(
+					key = HTTPLiveStreamURL(Callback(PlayVideo, url=channels[channel_id]))
+				)
+			],
+			video_resolution = '576',
+			audio_channels = 2,
+			optimized_for_streaming = True
+		)
+	]
+	
+@indirect
+def PlayVideo(url):
+		return IndirectResponse(VideoClipObject, key=HTTPLiveStreamURL(url))
