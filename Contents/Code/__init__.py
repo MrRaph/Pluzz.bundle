@@ -251,16 +251,16 @@ def LiveMenu(sender):
 		channel       = chaine['nom']
 		url = 'http://pluzz.francetv.fr/'+channel
 	
-		if not channel.startswith("france"):
-			# 1ere is blocked in mainland France
-			continue
+		try:
+			eo = URLService.MetadataObjectForURL(url=url)
+			eo.title = eo.source_title
+			eo.url = url
+			eo.thumb = Resource.ContentsOfURLWithFallback('http://www.renders-graphics.com/image/upload/normal/'+eo.title.replace(' ','_').replace('_4','4').replace('Ô','')+'.png')
 			
-		eo = URLService.MetadataObjectForURL(url=url)
-		eo.title = eo.source_title
-		eo.url = url
-		eo.thumb = Resource.ContentsOfURLWithFallback('http://www.renders-graphics.com/image/upload/normal/'+eo.title.replace(' ','_').replace('_4','4').replace('Ô','')+'.png')
-		
-		oc.add(eo)
+			oc.add(eo)
+		except:
+			#1ere is geoblocked in mainland France
+			continue
 	
 	return oc
 
@@ -393,19 +393,6 @@ def MediaView(ContentType, ContentFilter, title):
 		)
 	    )
     return oc
-
-
-@route('/video/pluzz/program')
-def Lookup(url, channel, oc=True):
-	eo = URLService.MetadataObjectForURL(url)
-	eo.url = url
-	eo. key = Callback(Lookup, url=url,v_url=v_url)
-	eo.rating_key=0
-	
-	if not oc:
-		return eo
-	
-	return ObjectContainer(items=[eo])
 
 @indirect
 def PlayVideo(url):

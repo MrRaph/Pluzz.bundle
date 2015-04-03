@@ -26,8 +26,6 @@ def MetadataObjectForURL(url):
 		
 		try: thumb = html.xpath("//div[img/@class='img-inrow']//img/@data-src")[0].replace('/100/', '/300/')
 		except: thumb = ''
-		Log("Ass")
-		Log(thumb)
 		
 		try: season = int(html.xpath('//span[@itemprop="season"]//span[@itemprop="name"]//text()')[0][1:])
 		except: season = 0
