@@ -77,7 +77,7 @@ def MediaObjectsForURL(url):
 	channel_id = url.rsplit('/',1)[1]
 	json = JSON.ObjectFromURL('http://webservices.francetelevisions.fr/catchup/flux/message_FT.json')
 	
-	channels = {c['nom']: c['video_ipad'] for c in json['configuration']['directs']}
+	channels = {c['nom']: c['video_ipad_v5'] for c in json['configuration']['directs']}
 
 	if not channel_id in channels.keys():
 		raise Ex.MediaNotAvailable
@@ -94,17 +94,7 @@ def MediaObjectsForURL(url):
 					key = HTTPLiveStreamURL(Callback(PlayVideo, url=channels[channel_id]))
 				)
 			],
-			video_resolution = '480',
-			audio_channels = 2,
-			optimized_for_streaming = True
-		),
-		MediaObject(
-			parts = [
-				PartObject(
-					key = HTTPLiveStreamURL(Callback(PlayVideo, url=getHDManifest(channels[channel_id])))
-				)
-			],
-			video_resolution = '720',
+			video_resolution = '576',
 			audio_channels = 2,
 			optimized_for_streaming = True
 		)
@@ -112,4 +102,4 @@ def MediaObjectsForURL(url):
 	
 @indirect
 def PlayVideo(url):
-		return IndirectResponse(VideoClipObject, key=HTTPLiveStreamURL(url))
+		return IndirectResponse(VideoClipObject, key=HTTPLiveStreamURL(getHDManifest(url)))
