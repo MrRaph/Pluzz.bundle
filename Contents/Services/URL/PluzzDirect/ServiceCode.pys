@@ -1,8 +1,24 @@
 import urllib
 
+try:
+  from urllib.parse import urlparse as compat_urllib_parse_urlparse
+except ImportError:  # Python 2
+  from urlparse import urlparse as compat_urllib_parse_urlparse
+
+
 def NormalizeURL(url):
 	return url
 
+def getHDManifest(video_url):
+	video_url_parsed = compat_urllib_parse_urlparse(video_url)
+	f4m_url = 'http://hdfauth.francetv.fr/esi/TA?url=%s' % video_url
+	f4m = HTTP.Request(f4m_url,cacheTime=0)
+	f4m.load()
+	a = compat_urllib_parse_urlparse(f4m.content)
+
+	authorized_url = "%s://%s%s?%s" % (a.scheme,a.netloc,a.path.replace('//','/'),a.query)
+	return authorized_url
+	
 def MetadataObjectForURL(url):
 	try:
 		html = HTML.ElementFromURL(url)
@@ -78,7 +94,17 @@ def MediaObjectsForURL(url):
 					key = HTTPLiveStreamURL(Callback(PlayVideo, url=channels[channel_id]))
 				)
 			],
-			video_resolution = '576',
+			video_resolution = '480',
+			audio_channels = 2,
+			optimized_for_streaming = True
+		),
+		MediaObject(
+			parts = [
+				PartObject(
+					key = HTTPLiveStreamURL(Callback(PlayVideo, url=getHDManifest(channels[channel_id])))
+				)
+			],
+			video_resolution = '720',
 			audio_channels = 2,
 			optimized_for_streaming = True
 		)

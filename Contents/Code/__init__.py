@@ -253,9 +253,9 @@ def LiveMenu(sender):
 	
 		try:
 			eo = URLService.MetadataObjectForURL(url=url)
-			eo.title = eo.source_title
+			eo.title = eo.source_title+' - '+eo.title
 			eo.url = url
-			eo.thumb = Resource.ContentsOfURLWithFallback('http://www.renders-graphics.com/image/upload/normal/'+eo.title.replace(' ','_').replace('_4','4').replace('Ô','')+'.png')
+			eo.thumb = Resource.ContentsOfURLWithFallback('http://www.renders-graphics.com/image/upload/normal/'+eo.source_title.replace(' ','_').replace('_4','4').replace('Ô','')+'.png')
 			
 			oc.add(eo)
 		except:
